@@ -1,6 +1,6 @@
 import argparse
-from langchain.vectorstores.chroma import Chroma
-from langchain.prompts import ChatPromptTemplate
+from langchain_community.vectorstores import Chroma
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 
 from get_embedding_function import get_embedding_function
@@ -34,11 +34,21 @@ def query_rag(query_text: str):
 
     # Search the DB.
     results = db.similarity_search_with_score(query_text, k=5)
+    
+    print(results)
+
+    # Print the search results for debugging
+    print("=== 搜索结果 ===")
+    for doc, score in results:
+        print(f"\n结果 (相似度分数: {score:.4f}):")
+        print(f"内容: {doc.page_content[:200]}...")
+        print(f"元数据: {doc.metadata}")
+    print("=" * 50)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
-    # print(prompt)
+    print(prompt)
 
     model = Ollama(model="mistral")
     response_text = model.invoke(prompt)
